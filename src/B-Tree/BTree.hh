@@ -30,6 +30,8 @@ private:
 
   void InsertNonfull(Node *, K, V);
 
+  void DeleteKey(Node *, K);
+
   pair<Node *, int> Search(Node *, K) const;
 
 public:
@@ -87,6 +89,11 @@ void BTree<K, V>::InsertNonfull(Node *node, K key, V value) {
 }
 
 template <typename K, typename V>
+void BTree<K, V>::DeleteKey(Node *node, K Key) {
+  // ......
+}
+
+template <typename K, typename V>
 pair<typename BTree<K, V>::Node *, int>
 BTree<K, V>::Search(BTree<K, V>::Node *node, K key) const {
 
@@ -125,6 +132,8 @@ template <typename K, typename V> void BTree<K, V>::Insert(K key, V value) {
   }
 }
 
-template <typename K, typename V> void BTree<K, V>::Remove(K key) {}
+template <typename K, typename V> void BTree<K, V>::Remove(K key) {
+  DeleteKey(root_, key);
+}
 
 #endif // DBDS_BTREE_HH
