@@ -14,6 +14,7 @@ class BTree {
   static constexpr int MAX_TVAL = 64;
 
   class Node {
+   public:
     std::vector<std::pair<K, V>> kvs_;
     std::vector<Node*> children_;
     bool leaf_;
@@ -23,24 +24,28 @@ class BTree {
   uint8_t t_;
   uint32_t size_;
 
-  void SplitNode(Node*, int, Node*);
+  void SplitNode(const Node*, int, const Node*);
 
-  void InsertNonfull(Node*, K, V);
+  void InsertNonfull(const Node*, const K&, const V&);
 
-  void DeleteKey(Node*, K);
+  void DeleteKey(const Node*, const K&);
 
-  std::pair<Node*, int> Search(Node*, K) const;
+  std::optional<std::pair<Node*, int>> Search(const Node*, const K&) const;
+
+  void Destroy(Node*);
 
  public:
   BTree(int t = DEFAULT_TVAL);
 
   ~BTree();
 
-  std::optional<std::reference_wrapper<V>> operator[](K) const;
+  void Set(const K&, const V&);
 
-  void Insert(K, V);
+  std::optional<std::reference_wrapper<V>> Get(const K&) const;
 
-  void Remove(K);
+  std::optional<std::reference_wrapper<V>> operator[](const K&) const;
+
+  void Remove(const K&);
 
   uint32_t Size() const;
 };
@@ -57,7 +62,20 @@ BTree<K, V>::BTree(int t) {
 }
 
 template <typename K, typename V>
-void BTree<K, V>::SplitNode(Node* parent, int idx, Node* child) {
+BTree<K, V>::~BTree() {
+  Destroy(root_);
+}
+
+template <typename K, typename V>
+void BTree<K, V>::Destroy(Node* node) {
+  for (auto child : node->children_) {
+    Destroy(child);
+  }
+  delete node;
+}
+
+template <typename K, typename V>
+void BTree<K, V>::SplitNode(const Node* parent, int idx, const Node* child) {
   auto new_node = new BTree<K, V>::Node;
   new_node->leaf_ = child->leaf_;
   new_node->kvs_ = vector(child->kvs_.begin() + t_ + 1, child->kvs_.end());
@@ -70,7 +88,8 @@ void BTree<K, V>::SplitNode(Node* parent, int idx, Node* child) {
 }
 
 template <typename K, typename V>
-void BTree<K, V>::InsertNonfull(Node* node, K key, V value) {
+void BTree<K, V>::InsertNonfull(const Node* node, const K& key,
+                                const V& value) {
   int pos = node->kvs_.size();
   if (node->leaf_) {
     auto it = lower_bound(node->kvs_.begin(), node->kvs_.end(), key);
@@ -89,13 +108,13 @@ void BTree<K, V>::InsertNonfull(Node* node, K key, V value) {
 }
 
 template <typename K, typename V>
-void BTree<K, V>::DeleteKey(Node* node, K Key) {
+void BTree<K, V>::DeleteKey(const Node* node, const K& Key) {
   // ......
 }
 
 template <typename K, typename V>
-std::pair<typename BTree<K, V>::Node*, int> BTree<K, V>::Search(
-    BTree<K, V>::Node* node, K key) const {
+std::optional<std::pair<typename BTree<K, V>::Node*, int>> BTree<K, V>::Search(
+    const BTree<K, V>::Node* node, const K& key) const {
   auto it = lower_bound(node->kvs_.begin(), node->kvs_.end(), key);
 
   if (it != node->kvs_.end() and key == (*it).first)
@@ -108,7 +127,7 @@ std::pair<typename BTree<K, V>::Node*, int> BTree<K, V>::Search(
 }
 
 template <typename K, typename V>
-std::optional<std::reference_wrapper<V>> BTree<K, V>::operator[](K key) const {
+std::optional<std::reference_wrapper<V>> BTree<K, V>::Get(const K& key) const {
   auto search_result = Search(root_, key);
   if (search_result.first != nullptr)
     return ref(search_result.first->kvs_[search_result.second]);
@@ -117,7 +136,13 @@ std::optional<std::reference_wrapper<V>> BTree<K, V>::operator[](K key) const {
 }
 
 template <typename K, typename V>
-void BTree<K, V>::Insert(K key, V value) {
+std::optional<std::reference_wrapper<V>> BTree<K, V>::operator[](
+    const K& key) const {
+  return Get(key);
+}
+
+template <typename K, typename V>
+void BTree<K, V>::Set(const K& key, const V& value) {
   auto org_root = root_;
   if (org_root->kvs_.size() == 2 * t_ - 1) {
     auto new_root = new BTree<K, V>::Node;
@@ -132,7 +157,7 @@ void BTree<K, V>::Insert(K key, V value) {
 }
 
 template <typename K, typename V>
-void BTree<K, V>::Remove(K key) {
+void BTree<K, V>::Remove(const K& key) {
   DeleteKey(root_, key);
 }
 

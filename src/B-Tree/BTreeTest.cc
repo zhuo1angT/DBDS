@@ -1,3 +1,8 @@
+#include <string>
+
 #include "BTree.hh"
 
-int main() { return 0; }
+int main() {
+  BTree<std::string, int> tree;
+  return 0;
+}
