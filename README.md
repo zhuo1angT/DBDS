@@ -2,7 +2,7 @@
 
 Some of the classic Data Structures that are frequently used in database systems.
 
-For simplicity, All the implementation store the data in RAM.
+For simplicity, All the implementations store the data in RAM.
 
 
 ## TODO
