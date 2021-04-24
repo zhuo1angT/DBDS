@@ -1,7 +1,8 @@
-#include "LSMTree.hh"
 #include <string>
 
+#include "LSMTree.hh"
+
 int main() {
-    LSMTree<std::string, int> tree;
-    return 0;
+  LSMTree<std::string, int> tree;
+  return 0;
 }

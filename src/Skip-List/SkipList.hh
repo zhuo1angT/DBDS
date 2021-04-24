@@ -5,10 +5,7 @@
 #ifndef DBDS_SKIPLIST_HH
 #define DBDS_SKIPLIST_HH
 
-template<typename K, typename V>
-class SkipList {
+template <typename K, typename V>
+class SkipList {};
 
-};
-
-
-#endif //DBDS_SKIPLIST_HH
+#endif  // DBDS_SKIPLIST_HH

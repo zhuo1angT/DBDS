@@ -5,10 +5,7 @@
 #ifndef DBDS_LSMTREE_HH
 #define DBDS_LSMTREE_HH
 
-template<typename K, typename V>
-class LSMTree {
+template <typename K, typename V>
+class LSMTree {};
 
-};
-
-
-#endif //DBDS_LSMTREE_HH
+#endif  // DBDS_LSMTREE_HH
