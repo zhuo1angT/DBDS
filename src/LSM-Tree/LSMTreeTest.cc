@@ -1,4 +1,7 @@
-//
-// Created by zhuo1ang on 4/24/21.
-//
+#include "LSMTree.hh"
+#include <string>
 
+int main() {
+    LSMTree<std::string, int> tree;
+    return 0;
+}

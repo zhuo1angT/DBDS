@@ -1,4 +1,7 @@
-//
-// Created by zhuo1ang on 4/24/21.
-//
+#include "SkipList.hh"
+#include <string>
 
+int main() {
+    SkipList<std::string, int> list;
+    return 0;
+}
