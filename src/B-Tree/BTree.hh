@@ -13,7 +13,6 @@ class BTree {
   static constexpr int MIN_TVAL = 2;
   static constexpr int DEFAULT_TVAL = 32;
   static constexpr int MAX_TVAL = 64;
-
   static constexpr auto COMP = [](const std::pair<K, V>& p, const K& k) {
     return p.first < k;
   };
@@ -33,9 +32,9 @@ class BTree {
 
   void InsertNonfull(Node*, const K&, const V&);
 
-  void DeleteKey(const Node*, const K&);
+  void DeleteKey(Node*, const K&);
 
-  std::optional<std::pair<Node*, uint32_t>> Search(const Node*, const K&) const;
+  std::optional<std::pair<Node*, uint32_t>> Search(Node*, const K&) const;
 
   void Destroy(Node*);
 
@@ -113,17 +112,16 @@ void BTree<K, V>::InsertNonfull(Node* node, const K& key, const V& value) {
 }
 
 template <typename K, typename V>
-void BTree<K, V>::DeleteKey(const Node* node, const K& Key) {
+void BTree<K, V>::DeleteKey(Node* node, const K& Key) {
   // ......
 }
 
 template <typename K, typename V>
 std::optional<std::pair<typename BTree<K, V>::Node*, uint32_t>>
-BTree<K, V>::Search(const BTree<K, V>::Node* node, const K& key) const {
+BTree<K, V>::Search(BTree<K, V>::Node* node, const K& key) const {
   auto iter = std::lower_bound(node->kvs_.begin(), node->kvs_.end(), key, COMP);
   if (iter != node->kvs_.end() and key == (*iter).first)
-    return std::make_pair(const_cast<BTree<K, V>::Node*>(node),
-                          iter - node->kvs_.begin());
+    return std::make_pair(node, iter - node->kvs_.begin());
   if (node->leaf_)
     return std::nullopt;
   else
@@ -134,10 +132,8 @@ template <typename K, typename V>
 std::optional<std::reference_wrapper<V>> BTree<K, V>::Get(const K& key) const {
   auto search_result = Search(root_, key);
   if (search_result.has_value())
-    return std::optional<std::reference_wrapper<V>>{
-        std::ref(search_result.value()
-                     .first->kvs_[search_result.value().second]
-                     .second)};
+    return std::ref(
+        search_result.value().first->kvs_[search_result.value().second].second);
   else
     return std::nullopt;
 }
