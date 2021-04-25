@@ -1,17 +1,46 @@
 #include <iostream>
-#include <string>
+#include <map>
+#include <set>
+#include <cstdlib>
+#include <ctime>
 
 #include "BTree.hh"
 
 using namespace std;
 
 int main() {
-  BTree<int, int> tree;
-  for (int i = 0; i < 10; i++) {
-    tree.Set(i, i * i);
-  }
-  for (int i = 0; i < 10; i++) {
-    cout << tree.Get(i).value() << endl;
-  }
-  return 0;
+    const int N = 100000;
+    srand(time(nullptr)); // use current time as seed for random generator
+
+    BTree<int, int> btree(32);
+    map<int, int> stdmap;
+
+    double p = 0.5;
+
+    for (int i = 0; i < N; i++) {
+        if ((static_cast<double>(rand()) / RAND_MAX) > p) {
+            int r1 = rand(), r2 = rand();
+            btree.Set(r1, r2);
+            stdmap[r1] = r2;
+            // cout << "Insert " << r1 << " " << r2 << endl;
+        } else if (!stdmap.empty() && !btree.Empty()) {
+            int index = rand() % stdmap.size();
+            auto iter = stdmap.begin();
+            advance(iter, index);
+            // cout << "Check " << iter->first << endl;
+            if (stdmap[iter->first] != btree.Get(iter->first).value()) {
+                goto FAIL;
+            }
+        } else if (stdmap.size() != btree.Size()) {
+            goto FAIL;
+        }
+    }
+
+    PASS:
+    cout << "Test Passed " << endl;
+    return 0;
+
+    FAIL:
+    cout << "Test Failed." << endl;
+    return 0;
 }
