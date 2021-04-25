@@ -3,6 +3,7 @@
 #include <set>
 #include <cstdlib>
 #include <ctime>
+#include <algorithm>
 
 #include "BTree.hh"
 
@@ -23,10 +24,9 @@ int main() {
             btree.Set(r1, r2);
             stdmap[r1] = r2;
             // cout << "Insert " << r1 << " " << r2 << endl;
-        } else if (!stdmap.empty() && !btree.Empty()) {
-            int index = rand() % stdmap.size();
-            auto iter = stdmap.begin();
-            advance(iter, index);
+        } else if (!stdmap.empty() and !btree.Empty()) {
+            auto iter = stdmap.lower_bound(rand());
+            if (iter == stdmap.end()) iter = stdmap.begin();
             // cout << "Check " << iter->first << endl;
             if (stdmap[iter->first] != btree.Get(iter->first).value()) {
                 goto FAIL;

@@ -78,10 +78,10 @@ void BTree<K, V>::SplitChild(std::shared_ptr<Node> parent, int idx) {
     auto child = parent->children_[idx];
     new_node->leaf_ = child->leaf_;
     new_node->kvs_ = std::vector(child->kvs_.begin() + t_, child->kvs_.end());
-    if (not child->leaf_) {
+    if (not child->leaf_)
         new_node->children_ =
                 std::vector(child->children_.begin() + t_, child->children_.end());
-    }
+
     parent->children_.insert(parent->children_.begin() + idx + 1, new_node);
     parent->kvs_.insert(parent->kvs_.begin() + idx, child->kvs_[t_ - 1]);
     parent->children_[idx]->kvs_.resize(t_ - 1);
@@ -90,18 +90,18 @@ void BTree<K, V>::SplitChild(std::shared_ptr<Node> parent, int idx) {
 
 template<typename K, typename V>
 void BTree<K, V>::InsertNonfull(std::shared_ptr<Node> node, const K &key, const V &value) {
-    auto it = std::lower_bound(node->kvs_.begin(), node->kvs_.end(), key, COMP);
-    if (it != node->kvs_.end() && (*it).first == key) {
-        (*it).second = value;
+    auto iter = std::lower_bound(node->kvs_.begin(), node->kvs_.end(), key, COMP);
+    if (iter != node->kvs_.end() and iter->first == key) {
+        iter->second = value;
         return;
     }
     if (node->leaf_) {
-        node->kvs_.insert(it, std::make_pair(key, value));
+        node->kvs_.insert(iter, std::make_pair(key, value));
         size_ += 1;
         return;
     }
 
-    int idx = it - node->kvs_.begin();
+    int idx = iter - node->kvs_.begin();
     if (node->children_[idx]->kvs_.size() == 2 * t_ - 1) {
         SplitChild(node, idx);
         if (key > node->kvs_[idx].first)
@@ -119,7 +119,7 @@ template<typename K, typename V>
 std::optional<std::pair<std::shared_ptr<typename BTree<K, V>::Node>, uint32_t>>
 BTree<K, V>::Search(std::shared_ptr<BTree<K, V>::Node> node, const K &key) const {
     auto iter = std::lower_bound(node->kvs_.begin(), node->kvs_.end(), key, COMP);
-    if (iter != node->kvs_.end() and key == (*iter).first)
+    if (iter != node->kvs_.end() and key == iter->first)
         return std::make_pair(node, iter - node->kvs_.begin());
     if (node->leaf_)
         return std::nullopt;
