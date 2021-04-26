@@ -27,8 +27,8 @@ private:
     };
 
     std::shared_ptr<Node> root_;
-    uint8_t t_;
-    uint32_t size_;
+    size_t t_;
+    size_t size_;
 
     void SplitChild(std::shared_ptr<Node>, int);
 
@@ -36,7 +36,7 @@ private:
 
     void DeleteKey(std::shared_ptr<Node>, const K &);
 
-    std::optional<std::pair<std::shared_ptr<Node>, uint32_t>> Search(std::shared_ptr<Node>, const K &) const;
+    std::optional<std::pair<std::shared_ptr<Node>, size_t>> Search(std::shared_ptr<Node>, const K &) const;
 
 
 public:
@@ -52,7 +52,7 @@ public:
 
     void Remove(const K &);
 
-    [[nodiscard]] uint32_t Size() const;
+    [[nodiscard]] size_t Size() const;
 
     [[nodiscard]] bool Empty() const;
 };
@@ -116,7 +116,7 @@ void BTree<K, V>::DeleteKey(std::shared_ptr<Node> node, const K &Key) {
 }
 
 template<typename K, typename V>
-std::optional<std::pair<std::shared_ptr<typename BTree<K, V>::Node>, uint32_t>>
+std::optional<std::pair<std::shared_ptr<typename BTree<K, V>::Node>, size_t>>
 BTree<K, V>::Search(std::shared_ptr<BTree<K, V>::Node> node, const K &key) const {
     auto iter = std::lower_bound(node->kvs_.begin(), node->kvs_.end(), key, COMP);
     if (iter != node->kvs_.end() and key == iter->first)
@@ -162,7 +162,7 @@ void BTree<K, V>::Remove(const K &key) {
 }
 
 template<typename K, typename V>
-uint32_t BTree<K, V>::Size() const {
+size_t BTree<K, V>::Size() const {
     return size_;
 }
 

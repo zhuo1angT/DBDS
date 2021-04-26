@@ -2,6 +2,6 @@
 #include <string>
 
 int main() {
-  SkipList<std::string, int> list;
-  return 0;
+    SkipList<int, int> list;
+    return 0;
 }
