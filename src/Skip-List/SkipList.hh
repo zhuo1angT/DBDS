@@ -20,8 +20,8 @@ private:
     std::uniform_real_distribution<double> dist;
 
     double p_;
-    size_t levels_num_;
-    size_t size_;
+    ssize_t levels_num_;
+    ssize_t size_;
 
 
     class Node {
@@ -52,6 +52,8 @@ private:
     std::vector<std::unique_ptr<Node>> all_nodes_;
     std::vector<Node *> heads_;
 
+    void GenNewLevel();
+
     Node *InsertNodeAtLeft(Node *, const K &, const V &);
 
     // return a single element vector when the container has the ideal key.
@@ -73,8 +75,9 @@ public:
 
     std::optional<std::reference_wrapper<V>> operator[](const K &) const;
 
-    [[nodiscard]] size_t Size() const;
+    [[nodiscard]] ssize_t Size() const;
 
+    [[nodiscard]] bool Empty() const;
 };
 
 template<typename K, typename V>
@@ -93,6 +96,8 @@ SkipList<K, V>::SkipList(double p) {
 
     auto initial_minus_inf = new Node(Node::NodeType::minus_inf);
     auto initial_inf = new Node(Node::NodeType::inf);
+    initial_minus_inf->right_ = initial_inf;
+    initial_inf->left_ = initial_minus_inf;
     heads_.push_back(initial_minus_inf);
 
     all_nodes_.push_back(std::move(std::unique_ptr<Node>(initial_minus_inf)));
@@ -101,21 +106,24 @@ SkipList<K, V>::SkipList(double p) {
 
 template<typename K, typename V>
 typename SkipList<K, V>::Node *SkipList<K, V>::InsertNodeAtLeft(Node *node, const K &key, const V &value) {
-    auto new_node = new Node;
+    auto new_node = new Node(Node::NodeType::normal);
     new_node->key_ = key;
     new_node->value_ = value;
     new_node->left_ = node->left_;
-    new_node->right = node;
+    new_node->right_ = node;
     node->left_->right_ = new_node;
-    node->left = new_node;
+    node->left_ = new_node;
 
-    all_nodes_.push_back(std::move(new_node));
+    all_nodes_.push_back(std::move(std::unique_ptr<Node>(new_node)));
+
+    return new_node;
 }
 
 template<typename K, typename V>
 void SkipList<K, V>::Set(const K &key, const V &value) {
     auto locate_result = Locate(key);
-    if (locate_result.size() == 1 && locate_result[0]->key_ == key) {
+    if (locate_result.size() == 1 && locate_result[0]->type_ == Node::NodeType::normal &&
+        locate_result[0]->key_ == key) {
         auto node = locate_result[0];
         while (node != nullptr) {
             node->value_ = value;
@@ -129,16 +137,25 @@ void SkipList<K, V>::Set(const K &key, const V &value) {
         return;
     } else {
         auto layer = GetRandomLayerNum();
+        auto org_levels_num = levels_num_;
+
+        while (levels_num_ < layer)
+            GenNewLevel();
+
+        for (int i = levels_num_ - org_levels_num - 1; i >= 0; i--)
+            locate_result.insert(locate_result.begin(), heads_[i]->right_);
+
         Node *prev_node = nullptr;
         Node *new_node = nullptr;
-        for (int i = levels_num_ - layer; i < levels_num_; i++) {
-            new_node = InsertNodeAtLeft(locate_result[i]);
-            new_node->above_ = prev_node;
+        for (int i = levels_num_ - 1; i >= levels_num_ - layer; i--) {
+            new_node = InsertNodeAtLeft(locate_result[i], key, value);
+            new_node->below_ = prev_node;
             if (prev_node != nullptr) // just for the first round of iteration
-                prev_node->below_ = new_node;
+                prev_node->above_ = new_node;
             prev_node = new_node;
         }
-        new_node->below_ = nullptr;
+        new_node->above_ = nullptr;
+        size_ += 1;
     }
 }
 
@@ -157,7 +174,7 @@ std::optional<std::reference_wrapper<V>> SkipList<K, V>::operator[](const K &key
 }
 
 template<typename K, typename V>
-size_t SkipList<K, V>::Size() const {
+ssize_t SkipList<K, V>::Size() const {
     return size_;
 }
 
@@ -167,7 +184,7 @@ std::vector<typename SkipList<K, V>::Node *> SkipList<K, V>::Locate(const K &key
     std::vector<Node *> ret;
     while (cur_node != nullptr) {
         auto next_node = cur_node->right_;
-        if (key == cur_node->key) {
+        if (key == cur_node->key_) {
             return {cur_node};
         } else if (key < next_node->key_ || next_node->type_ == Node::NodeType::inf) {
             ret.push_back(next_node);
@@ -182,11 +199,32 @@ std::vector<typename SkipList<K, V>::Node *> SkipList<K, V>::Locate(const K &key
 template<typename K, typename V>
 int SkipList<K, V>::GetRandomLayerNum() {
     int coin_flip_num = 1;
-    while (dist(mt) < p_) {
+    double random_num = 0.0;
+    while ((random_num = dist(mt)) < p_) {
         coin_flip_num++;
         if (coin_flip_num >= MAX_LAYER_NUM) break;
     }
     return coin_flip_num;
+}
+
+template<typename K, typename V>
+void SkipList<K, V>::GenNewLevel() {
+    auto initial_minus_inf = new Node(Node::NodeType::minus_inf);
+    auto initial_inf = new Node(Node::NodeType::inf);
+    initial_minus_inf->right_ = initial_inf;
+    initial_inf->left_ = initial_minus_inf;
+    initial_minus_inf->below_ = heads_[0];
+    initial_inf->below_ = heads_[0]->right_;
+    heads_.insert(heads_.begin(), initial_minus_inf);
+    levels_num_ += 1;
+
+    all_nodes_.push_back(std::move(std::unique_ptr<Node>(initial_minus_inf)));
+    all_nodes_.push_back(std::move(std::unique_ptr<Node>(initial_inf)));
+}
+
+template<typename K, typename V>
+bool SkipList<K, V>::Empty() const {
+    return size_ == 0;
 }
 
 
