@@ -29,6 +29,7 @@ private:
         enum NodeType {
             minus_inf, inf, normal
         };
+
         K key_;
         V value_;
         NodeType type_;
@@ -54,14 +55,16 @@ private:
 
     void GenNewLevel();
 
+    // Note that this method does *not* take care of the above_ & the below_ pointers
     Node *InsertNodeAtLeft(Node *, const K &, const V &);
 
-    // return a single element vector when the container has the ideal key.
+    // Return a single element vector when the container has the ideal key.
     // otherwise, return a vector with the pointers in each levels whose key
     // is greater than the given one.
     std::vector<Node *> Locate(const K &) const;
 
-    int GetRandomLayerNum();
+    // Generate a randomized level number, for an insertion
+    int GetRandomLevelNum();
 
 public:
 
@@ -93,6 +96,7 @@ SkipList<K, V>::SkipList(double p) {
         p_ = P_MAX;
     else
         p_ = p;
+
     levels_num_ = 1;
     size_ = 0;
 
@@ -117,7 +121,6 @@ typename SkipList<K, V>::Node *SkipList<K, V>::InsertNodeAtLeft(Node *node, cons
     node->left_ = new_node;
 
     all_nodes_.push_back(std::move(std::unique_ptr<Node>(new_node)));
-
     return new_node;
 }
 
@@ -137,28 +140,27 @@ void SkipList<K, V>::Set(const K &key, const V &value) {
             node = node->below_;
         }
         return;
-    } else {
-        auto layer = GetRandomLayerNum();
-        auto org_levels_num = levels_num_;
-
-        while (levels_num_ < layer)
-            GenNewLevel();
-
-        for (int i = levels_num_ - org_levels_num - 1; i >= 0; i--)
-            locate_result.insert(locate_result.begin(), heads_[i]->right_);
-
-        Node *prev_node = nullptr;
-        Node *new_node = nullptr;
-        for (int i = levels_num_ - 1; i >= levels_num_ - layer; i--) {
-            new_node = InsertNodeAtLeft(locate_result[i], key, value);
-            new_node->below_ = prev_node;
-            if (prev_node != nullptr) // just for the first round of iteration
-                prev_node->above_ = new_node;
-            prev_node = new_node;
-        }
-        new_node->above_ = nullptr;
-        size_ += 1;
     }
+    auto cur_levels = GetRandomLevelNum();
+    auto org_levels_num = levels_num_;
+
+    while (levels_num_ < cur_levels)
+        GenNewLevel();
+
+    for (int i = levels_num_ - org_levels_num - 1; i >= 0; i--)
+        locate_result.insert(locate_result.begin(), heads_[i]->right_);
+
+    Node *prev_node = nullptr;
+    Node *new_node = nullptr;
+    for (int i = levels_num_ - 1; i >= levels_num_ - cur_levels; i--) {
+        new_node = InsertNodeAtLeft(locate_result[i], key, value);
+        new_node->below_ = prev_node;
+        if (prev_node != nullptr) // just for the first round of iteration
+            prev_node->above_ = new_node;
+        prev_node = new_node;
+    }
+    new_node->above_ = nullptr;
+    size_ += 1;
 }
 
 template<typename K, typename V>
@@ -199,10 +201,9 @@ std::vector<typename SkipList<K, V>::Node *> SkipList<K, V>::Locate(const K &key
 }
 
 template<typename K, typename V>
-int SkipList<K, V>::GetRandomLayerNum() {
+int SkipList<K, V>::GetRandomLevelNum() {
     int coin_flip_num = 1;
-    double random_num = 0.0;
-    while ((random_num = dist(mt)) < p_) {
+    while (dist(mt) < p_) {
         coin_flip_num++;
         if (coin_flip_num >= MAX_LAYER_NUM) break;
     }
