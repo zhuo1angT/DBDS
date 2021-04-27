@@ -12,6 +12,7 @@ class SkipList {
 private:
 
     static constexpr double P_MIN = 0.01;
+    static constexpr double P_DEFAULT = 0.50;
     static constexpr double P_MAX = 0.80;
     static constexpr int MAX_LAYER_NUM = 16;
 
@@ -68,7 +69,7 @@ private:
 
 public:
 
-    explicit SkipList(double p = 0.25);
+    explicit SkipList(double p = P_DEFAULT);
 
     ~SkipList() = default;
 
@@ -249,6 +250,7 @@ void SkipList<K, V>::Remove(const K &key) {
         node->right_->left_ = node->left_;
         node = node->below_;
     }
+    size_ -= 1;
 }
 
 
