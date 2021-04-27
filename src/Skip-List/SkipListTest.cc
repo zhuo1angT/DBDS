@@ -15,7 +15,7 @@ int main() {
     SkipList<int, int> skiplist(32);
     map<int, int> stdmap;
 
-    double p = 0.5;
+    double p = 0.3;
 
     for (int i = 0; i < N; i++) {
         if ((static_cast<double>(rand()) / RAND_MAX) > p) {
@@ -31,6 +31,8 @@ int main() {
                 // cout << "Value not equal" << endl;
                 goto FAIL;
             }
+            stdmap.erase(iter->first);
+            skiplist.Remove(iter->first);
         } else if (stdmap.size() != skiplist.Size()) {
             // cout << "Size not equal" << endl;
             goto FAIL;

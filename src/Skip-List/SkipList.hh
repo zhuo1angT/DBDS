@@ -75,6 +75,8 @@ public:
 
     std::optional<std::reference_wrapper<V>> operator[](const K &) const;
 
+    void Remove(const K &);
+
     [[nodiscard]] ssize_t Size() const;
 
     [[nodiscard]] bool Empty() const;
@@ -225,6 +227,27 @@ void SkipList<K, V>::GenNewLevel() {
 template<typename K, typename V>
 bool SkipList<K, V>::Empty() const {
     return size_ == 0;
+}
+
+template<typename K, typename V>
+void SkipList<K, V>::Remove(const K &key) {
+    auto locate_result = Locate(key);
+    if (not(locate_result.size() == 1 && locate_result[0]->type_ == Node::NodeType::normal &&
+            locate_result[0]->key_ == key)) {
+        return;
+    }
+    auto node = locate_result[0];
+    while (node != nullptr) {
+        node->left_->right_ = node->right_;
+        node->right_->left_ = node->left_;
+        node = node->above_;
+    }
+    node = locate_result[0];
+    while (node != nullptr) {
+        node->left_->right_ = node->right_;
+        node->right_->left_ = node->left_;
+        node = node->below_;
+    }
 }
 
 
